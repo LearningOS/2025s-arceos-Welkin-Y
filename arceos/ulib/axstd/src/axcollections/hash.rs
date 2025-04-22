@@ -1,3 +1,5 @@
+#[no_std]
+extern crate alloc;
 use alloc::string::String;
 use core::hash::{Hash, Hasher};
 
@@ -13,9 +15,7 @@ impl DefaultHasher {
     /// instances created through `new` or `default`.
     #[must_use]
     pub const fn new() -> DefaultHasher {
-        DefaultHasher {
-            state: 0,
-        }
+        DefaultHasher { state: 0 }
     }
 }
 
@@ -35,7 +35,10 @@ impl Hasher for DefaultHasher {
     #[inline]
     fn write(&mut self, msg: &[u8]) {
         for byte in msg {
-            self.state = self.state.wrapping_mul(1145141919810).wrapping_add(*byte as u64);
+            self.state = self
+                .state
+                .wrapping_mul(1145141919810)
+                .wrapping_add(*byte as u64);
         }
     }
 
