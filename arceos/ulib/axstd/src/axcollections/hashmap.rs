@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 use core::clone::Clone;
 use core::hash::{Hash, Hasher};
 
+/// A dumb HashMap
 pub struct HashMap<K, V> {
     buckets: Vec<Option<(K, V)>>,
     size: usize,
@@ -35,7 +36,7 @@ impl<K: Hash + Eq + Clone, V: Clone> HashMap<K, V> {
     }
 
     fn resize(&mut self) {
-        let new_capacity = self.buckets.len() * 2;
+        let new_capacity = self.buckets.len() * 3;
         let mut new_buckets = vec![None; new_capacity];
         for bucket in &mut self.buckets.drain(..) {
             if let Some((key, value)) = bucket {

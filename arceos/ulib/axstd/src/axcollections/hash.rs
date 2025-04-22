@@ -1,7 +1,9 @@
 use alloc::string::String;
 use core::hash::{Hash, Hasher};
 
-pub struct DefaultHasher;
+pub struct DefaultHasher {
+    state: u64,
+}
 
 impl DefaultHasher {
     /// Creates a new `DefaultHasher`.
@@ -11,7 +13,9 @@ impl DefaultHasher {
     /// instances created through `new` or `default`.
     #[must_use]
     pub const fn new() -> DefaultHasher {
-        DefaultHasher
+        DefaultHasher {
+            state: 0,
+        }
     }
 }
 
@@ -27,17 +31,16 @@ impl Default for DefaultHasher {
 }
 
 impl Hasher for DefaultHasher {
+    /// Dumb hash
     #[inline]
     fn write(&mut self, msg: &[u8]) {
-        println!("Hashing: {:?}", msg);
-        todo!("Not implemented yet");
+        for byte in msg {
+            self.state = self.state.wrapping_mul(1145141919810).wrapping_add(*byte as u64);
+        }
     }
 
     #[inline]
     fn finish(&self) -> u64 {
-        //TODO: implement a real hash function
-        println!("Finishing hash");
-        todo!("Not implemented yet");
-        0
+        self.state
     }
 }
