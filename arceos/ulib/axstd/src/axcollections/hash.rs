@@ -1,7 +1,5 @@
-#[no_std]
 extern crate alloc;
-use alloc::string::String;
-use core::hash::{Hash, Hasher};
+use core::hash::Hasher;
 
 pub struct DefaultHasher {
     state: u64,

@@ -4,6 +4,8 @@
 #[cfg(feature = "axstd")]
 use axstd::println;
 
+use axalloc::GlobalAllocator;
+
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
     println!("[WithColor]: Hello, Arceos!");

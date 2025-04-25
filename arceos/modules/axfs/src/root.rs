@@ -4,6 +4,7 @@
 
 use alloc::{string::String, sync::Arc, vec::Vec};
 use axerrno::{ax_err, AxError, AxResult};
+use axfs_vfs::VfsDirEntry;
 use axfs_vfs::{VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType, VfsOps, VfsResult};
 use axsync::Mutex;
 use lazyinit::LazyInit;
@@ -133,13 +134,39 @@ impl VfsNodeOps for RootDirectory {
     }
 
     fn rename(&self, src_path: &str, dst_path: &str) -> VfsResult {
-        self.lookup_mounted_fs(src_path, |fs, rest_path| {
-            if rest_path.is_empty() {
+        self.lookup_mounted_fs(src_path, |fs, rest_src| {
+            if rest_src.is_empty() {
                 ax_err!(PermissionDenied) // cannot rename mount points
             } else {
-                fs.root_dir().rename(rest_path, dst_path)
+                self.lookup_mounted_fs(dst_path, |fs, rest_dst| {
+                    if rest_dst.is_empty() {
+                        return ax_err!(PermissionDenied); // cannot rename mount points
+                    } else {
+                        info!("Called rename {} to {}", rest_src, rest_dst);
+                        //TODO: fs.root_dir().rename(rest_path, dst_path);
+                        let dst_buf = dst_path.as_bytes();
+                        let src_buf = &mut [0 as u8; 4];
+                        let mut offset = 0 as usize;
+                        self.create(dst_path, VfsNodeType::File)?;
+                        let dirents = &mut [const { VfsDirEntry::default() }; 32];
+                        fs.root_dir().read_dir(0, dirents);
+                        for dirent in dirents.iter_mut() {
+                            let name = String::from("/")
+                                + &String::from_utf8_lossy(dirent.name_as_bytes()).into_owned();
+                            info!("name: {}, {}", name, rest_src);
+                            if name == rest_src {
+                                //TODO: change dirent name
+                                info!("offset: {}", offset);
+                            }
+                            offset += core::mem::size_of::<VfsDirEntry>();
+                        }
+                        Ok(())
+                    }
+                });
+                Ok(())
             }
-        })
+        });
+        Ok(())
     }
 }
 
@@ -306,5 +333,6 @@ pub(crate) fn rename(old: &str, new: &str) -> AxResult {
         warn!("dst file already exist, now remove it");
         remove_file(None, new)?;
     }
+    info!("lookup ok");
     parent_node_of(None, old).rename(old, new)
 }

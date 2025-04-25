@@ -1,5 +1,4 @@
 //! Standard library macros
-
 /// Prints to the standard output.
 ///
 /// Equivalent to the [`println!`] macro except that a newline is not printed at
@@ -17,7 +16,11 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     () => { $crate::print!("\n") };
-    ($($arg:tt)*) => {
-        $crate::io::__print_impl(format_args!("{}\n", format_args!($($arg)*)));
-    }
+    ($fmt:literal $(, $arg:tt)*) => {{
+        if $fmt.starts_with("[WithColor]:") {
+            $crate::io::__print_impl(format_args!(concat!("\x1b[31m", $fmt, "\x1b[0m\n") $(, $arg)*));
+        } else {
+            $crate::io::__print_impl(format_args!(concat!($fmt, "\n") $(, $arg)*));
+        }
+    }};
 }
